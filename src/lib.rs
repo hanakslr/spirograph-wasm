@@ -29,44 +29,8 @@ impl Spirograph {
         Self { ctx, t: 0.0 }
     }
 
-    pub fn clear(&mut self) {
-        let width = self.ctx.canvas().unwrap().width() as f64;
-        let height = self.ctx.canvas().unwrap().height() as f64;
-        self.ctx.clear_rect(0.0, 0.0, width, height);
-    }
-
-    pub fn draw_single(&mut self, inner_r: f64, offset: f64) {
-        let width = self.ctx.canvas().unwrap().width() as f64;
-        let height = self.ctx.canvas().unwrap().height() as f64;
-
-        let r_fixed = width / 4.0;
-        let r = inner_r;
-        let p = offset;
-
-        // Calculate the number of rotations needed
-        // The pattern repeats when the inner circle has completed an integer number of rotations
-        // relative to the outer circle. This happens when:
-        // (r_fixed + r) / r is a rational number
-        // The number of rotations is the denominator of this ratio in lowest terms
-        let ratio = (r_fixed + r) / r;
-        let rotations = calculate_rotations(ratio);
-
-        let step_size = 1000;
-        self.ctx.begin_path();
-
-        for i in 0..(step_size * rotations) {
-            let t = (2.0 * f64::consts::PI / step_size as f64) * i as f64;
-            let x = ((r_fixed + r) * t.cos()) - ((r + p) * (((r_fixed + r) / r) * t).cos());
-            let y = (r_fixed + r) * t.sin() - ((r + p) * (t * ((r_fixed + r) / r)).sin());
-
-            self.ctx.line_to(x + width / 2.0, y + height / 2.0);
-        }
-
-        self.ctx.stroke();
-    }
-
     // Helper function to calculate the number of rotations needed
-    fn calculate_rotations(ratio: f64) -> i32 {
+    fn calculate_rotations(&self, ratio: f64) -> i32 {
         // Convert the ratio to a fraction in lowest terms
         // We'll use a simple continued fraction approximation
         let mut n = ratio;
@@ -94,6 +58,54 @@ impl Spirograph {
 
         // If we couldn't find a good approximation, return a reasonable default
         100
+    }
+
+    pub fn clear(&mut self) {
+        let width = self.ctx.canvas().unwrap().width() as f64;
+        let height = self.ctx.canvas().unwrap().height() as f64;
+        self.ctx.clear_rect(0.0, 0.0, width, height);
+    }
+
+    pub fn draw_single(
+        &mut self,
+        inner_r: f64,
+        offset: f64,
+        phase_angle: Option<f64>,
+        stroke_color: Option<String>,
+    ) {
+        let width = self.ctx.canvas().unwrap().width() as f64;
+        let height = self.ctx.canvas().unwrap().height() as f64;
+        let phase_angle = phase_angle.unwrap_or(0.0);
+
+        let r_fixed = width / 4.0;
+        let r = inner_r;
+        let p = offset;
+
+        // Calculate the number of rotations needed
+        // The pattern repeats when the inner circle has completed an integer number of rotations
+        // relative to the outer circle. This happens when:
+        // (r_fixed + r) / r is a rational number
+        // The number of rotations is the denominator of this ratio in lowest terms
+        let ratio = (r_fixed + r) / r;
+        let rotations = self.calculate_rotations(ratio);
+
+        let step_size = 5000;
+        self.ctx.begin_path();
+
+        for i in 0..(step_size * rotations) {
+            let t = (2.0 * f64::consts::PI / step_size as f64) * i as f64;
+            let x = ((r_fixed + r) * t.cos())
+                - ((r + p) * (((r_fixed + r) / r) * (t + phase_angle)).cos());
+            let y = (r_fixed + r) * t.sin()
+                - ((r + p) * ((t + phase_angle) * ((r_fixed + r) / r)).sin());
+
+            self.ctx.line_to(x + width / 2.0, y + height / 2.0);
+        }
+
+        if let Some(color) = stroke_color {
+            self.ctx.set_stroke_style_str(&color);
+        }
+        self.ctx.stroke();
     }
 
     pub fn draw(&mut self) {
