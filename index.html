@@ -7,26 +7,83 @@
         body {
             margin: 0;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             background: #f0f0f0;
+            font-family: Arial, sans-serif;
         }
         canvas {
             border: 1px solid #ccc;
             background: white;
+            margin-bottom: 20px;
+        }
+        .controls {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        label {
+            font-size: 14px;
+            color: #333;
+        }
+        input {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
         }
     </style>
 </head>
 <body>
+    <div class="controls">
+        <div class="input-group">
+            <label for="inner-r">Inner Radius:</label>
+            <input type="number" id="inner-r" value="100" step="1">
+        </div>
+        <div class="input-group">
+            <label for="offset">Offset:</label>
+            <input type="number" id="offset" value="50" step="1">
+        </div>
+        <button onclick="redraw()">Draw</button>
+        <button onclick="clearCanvas()">Clear</button>
+    </div>
     <canvas id="spiro-canvas" width="800" height="800"></canvas>
     <script type="module">
         import init, { Spirograph } from './pkg/spirograph_wasm.js';
         
+        let spiro;
+        
         async function main() {
             await init();
-            const spiro = new Spirograph("spiro-canvas");
-            spiro.draw();
+            spiro = new Spirograph("spiro-canvas");
+            redraw();
+        }
+
+        window.redraw = function() {
+            const innerR = parseFloat(document.getElementById('inner-r').value);
+            const offset = parseFloat(document.getElementById('offset').value);
+            spiro.draw_single(innerR, offset);
+        }
+
+        window.clearCanvas = function() {
+            spiro.clear();
         }
 
         main();
