@@ -40,18 +40,21 @@ impl Spirograph {
         let height = self.ctx.canvas().unwrap().height() as f64;
 
         let r_fixed = width / 4.0;
-
-        // in motion r
         let r = inner_r;
-
-        // distance from rotating edge
         let p = offset;
 
-        let step_size = 1000;
+        // Calculate the number of rotations needed
+        // The pattern repeats when the inner circle has completed an integer number of rotations
+        // relative to the outer circle. This happens when:
+        // (r_fixed + r) / r is a rational number
+        // The number of rotations is the denominator of this ratio in lowest terms
+        let ratio = (r_fixed + r) / r;
+        let rotations = calculate_rotations(ratio);
 
+        let step_size = 1000;
         self.ctx.begin_path();
 
-        for i in 0..step_size {
+        for i in 0..(step_size * rotations) {
             let t = (2.0 * f64::consts::PI / step_size as f64) * i as f64;
             let x = ((r_fixed + r) * t.cos()) - ((r + p) * (((r_fixed + r) / r) * t).cos());
             let y = (r_fixed + r) * t.sin() - ((r + p) * (t * ((r_fixed + r) / r)).sin());
@@ -60,6 +63,37 @@ impl Spirograph {
         }
 
         self.ctx.stroke();
+    }
+
+    // Helper function to calculate the number of rotations needed
+    fn calculate_rotations(ratio: f64) -> i32 {
+        // Convert the ratio to a fraction in lowest terms
+        // We'll use a simple continued fraction approximation
+        let mut n = ratio;
+        let mut d = 1.0;
+        let mut prev_n = 1.0;
+        let mut prev_d = 0.0;
+
+        // Use continued fraction expansion to find a rational approximation
+        for _ in 0..10 {
+            // Limit iterations to avoid infinite loops
+            let whole = n.floor();
+            let new_n = prev_n + whole * n;
+            let new_d = prev_d + whole * d;
+
+            prev_n = n;
+            prev_d = d;
+            n = new_n;
+            d = new_d;
+
+            // If we've found a good approximation, return the denominator
+            if (ratio - n / d).abs() < 0.0001 {
+                return d.round() as i32;
+            }
+        }
+
+        // If we couldn't find a good approximation, return a reasonable default
+        100
     }
 
     pub fn draw(&mut self) {
