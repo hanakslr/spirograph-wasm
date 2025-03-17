@@ -1,7 +1,7 @@
-use std::f64;
+use core::f64;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
+use web_sys::{window, CanvasRenderingContext2d, HtmlCanvasElement};
 
 #[wasm_bindgen]
 pub struct Spirograph {
@@ -26,15 +26,27 @@ impl Spirograph {
             .dyn_into::<CanvasRenderingContext2d>()
             .unwrap();
 
-        ctx.begin_path();
-
-        // Draw a circle
-        ctx.arc(75.0, 75.0, 50.0, 0.0, f64::consts::PI * 2.0)
-            .unwrap();
-
-        ctx.stroke();
-
         Self { ctx, t: 0.0 }
+    }
+
+    pub fn draw(&mut self) {
+        // This canvas element is set by the dom element in React/JS
+        let width = self.ctx.canvas().unwrap().width() as f64;
+        let height = self.ctx.canvas().unwrap().height() as f64;
+
+        let r0 = width / 2.0;
+
+        self.ctx.begin_path();
+        self.ctx.move_to(width, height / 2.0);
+
+        for i in 0..1000 {
+            let t = (2.0 * f64::consts::PI / 1000.0) * i as f64;
+            let x = r0 * t.cos() + width / 2.0;
+            let y = r0 * t.sin() + height / 2.0;
+
+            self.ctx.line_to(x, y);
+        }
+        self.ctx.stroke();
     }
 }
 #[wasm_bindgen]
