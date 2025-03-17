@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Spirograph</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f0f0f0;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="spiro-canvas" width="800" height="800"></canvas>
+    <script type="module">
+        import init, { Spirograph } from './pkg/spirograph_wasm.js';
+        
+        async function main() {
+            await init();
+            const spiro = new Spirograph("spiro-canvas");
+            spiro.draw();
+        }
+
+        main();
+    </script>
+</body>
+</html> 

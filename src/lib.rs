@@ -1,7 +1,7 @@
 use core::f64;
 use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsCast;
-use web_sys::{window, CanvasRenderingContext2d, HtmlCanvasElement};
+use wasm_bindgen::JsValue;
+use web_sys::{console, CanvasRenderingContext2d, HtmlCanvasElement};
 
 #[wasm_bindgen]
 pub struct Spirograph {
@@ -34,34 +34,74 @@ impl Spirograph {
         let width = self.ctx.canvas().unwrap().width() as f64;
         let height = self.ctx.canvas().unwrap().height() as f64;
 
-        let r0 = width / 2.0;
+        // This just designates resolution
+        let step_size = 3000;
+
+        let r0 = width / 4.0;
+        let n0 = 1.0;
 
         self.ctx.begin_path();
         self.ctx.move_to(width, height / 2.0);
 
-        for i in 0..1000 {
-            let t = (2.0 * f64::consts::PI / 1000.0) * i as f64;
+        let mut pos_x0 = vec![0.0; step_size];
+        let mut pos_y0 = vec![0.0; step_size];
+
+        for i in 0..step_size {
+            let t = (2.0 * f64::consts::PI / step_size as f64) * i as f64 * n0;
             let x = r0 * t.cos() + width / 2.0;
             let y = r0 * t.sin() + height / 2.0;
+            pos_x0[i] = x;
+            pos_y0[i] = y;
+
+            console::log_1(&JsValue::from_str(&format!("0 - x {} y {}", x, y)));
 
             self.ctx.line_to(x, y);
         }
+
+        self.ctx.stroke();
+
+        // Now lets draw another one
+        let r1 = width / 8.0;
+        let n1 = 32.0;
+
+        self.ctx.begin_path();
+        self.ctx.move_to(width, height / 2.0);
+
+        let mut pos_x1 = vec![0.0; step_size];
+        let mut pos_y1 = vec![0.0; step_size];
+
+        for i in 0..step_size {
+            let t = (2.0 * f64::consts::PI / step_size as f64) * i as f64 * n1;
+            let x = r1 * t.cos() + pos_x0[i];
+            let y = r1 * t.sin() + pos_y0[i];
+
+            pos_x1[i] = x;
+            pos_y1[i] = y;
+
+            console::log_1(&JsValue::from_str(&format!("1 - x {} y {}", x, y)));
+
+            self.ctx.line_to(x, y);
+        }
+
+        self.ctx.set_stroke_style_str("#0000FF");
+        self.ctx.stroke();
+
+        // And lets draw another one
+        let r1 = width / 21.0;
+        let n1 = 15.0;
+
+        self.ctx.begin_path();
+        self.ctx.move_to(width, height / 2.0);
+
+        for i in 0..step_size {
+            let t = (2.0 * f64::consts::PI / step_size as f64) * i as f64 * n1;
+            let x = r1 * t.cos() + pos_x1[i];
+            let y = r1 * t.sin() + pos_y1[i];
+
+            self.ctx.line_to(x, y);
+        }
+
+        self.ctx.set_stroke_style_str("#800080");
         self.ctx.stroke();
     }
-}
-#[wasm_bindgen]
-pub fn generate_svg() -> String {
-    let mut svg = String::from(
-        r#"<svg width="500" height="500" xmlns="http://www.w3.org/2000/svg">
-        <path d="M"#,
-    );
-
-    for t in (0..=1000).map(|x| x as f64 * 0.01) {
-        let x = 250.0 + 100.0 * (t * 3.0).cos() + 50.0 * (t * 2.0).cos();
-        let y = 250.0 + 100.0 * (t * 3.0).sin() + 50.0 * (t * 2.0).sin();
-        svg.push_str(&format!("{},{} ", x, y));
-    }
-
-    svg.push_str(r#"" stroke="black" fill="none" stroke-width="2"/></svg>"#);
-    svg
 }
