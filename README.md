@@ -6,6 +6,8 @@ Math is cool. Art is cool. Spirograph = math + art.
 
 I built this to explore Rust + WASM.
 
+To build `wasm-pack build --target web` to serve: `python3 -m http.server 8000`.
+
 ## Reference material:
 
 On WASM:

@@ -1,6 +1,7 @@
 use core::f64;
 use wasm_bindgen::prelude::*;
-use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
+use wasm_bindgen::JsValue;
+use web_sys::{console, CanvasRenderingContext2d, HtmlCanvasElement};
 
 #[wasm_bindgen]
 pub struct Spirograph {
@@ -73,10 +74,15 @@ impl Spirograph {
     ) {
         let width = self.ctx.canvas().unwrap().width() as f64;
         let height = self.ctx.canvas().unwrap().height() as f64;
-        let phase_angle = phase_angle.unwrap_or(0.0);
+        // Convert phase angle from degrees to radians
+        let phase_angle = phase_angle.unwrap_or(0.0) * f64::consts::PI / 180.0;
+
+        console::log_1(&JsValue::from_str(&format!(
+            "Parameters - inner_r: {}, offset: {}, phase_angle: {}",
+            inner_r, offset, phase_angle
+        )));
 
         let r_fixed = width / 4.0;
-
         let r = inner_r;
         let p = offset;
 
@@ -88,13 +94,13 @@ impl Spirograph {
         let ratio = (r_fixed + r) / r;
         let rotations = self.calculate_rotations(ratio);
 
-        let step_size = 5000;
+        let step_size = 10000;
         self.ctx.begin_path();
 
         for i in 0..(step_size * rotations) {
-            let t = (2.0 * f64::consts::PI / step_size as f64) * i as f64 + phase_angle;
-            let x = (r_fixed - r) * t.cos() + p * (((r_fixed - r) / r) * t).cos();
-            let y = (r_fixed - r) * t.sin() + p * (t * ((r_fixed - r) / r)).sin();
+            let t = (2.0 * f64::consts::PI / step_size as f64) * i as f64;
+            let x = (r_fixed - r) * t.cos() + p * (((r_fixed - r) / r) * (t + phase_angle)).cos();
+            let y = (r_fixed - r) * t.sin() + p * ((t + phase_angle) * ((r_fixed - r) / r)).sin();
 
             self.ctx.line_to(x + width / 2.0, y + height / 2.0);
         }
@@ -102,6 +108,7 @@ impl Spirograph {
         if let Some(color) = stroke_color {
             self.ctx.set_stroke_style_str(&color);
         }
+        self.ctx.set_line_width(1.5);
         self.ctx.stroke();
     }
 }
