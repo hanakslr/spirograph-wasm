@@ -30,14 +30,14 @@ impl Spirograph {
 
     // Helper function to calculate the number of rotations needed
     fn calculate_rotations(&self, ratio: f64) -> i32 {
-        // Convert the ratio to a fraction in lowest terms
-        // We'll use a simple continued fraction approximation
+        // Convert the ratio to a fraction in lowest terms.
+        // The drawing is complete, and repeats on itself when the denominator
+        // is a whole number.
         let mut n = ratio;
         let mut d = 1.0;
         let mut prev_n = 1.0;
         let mut prev_d = 0.0;
 
-        // Use continued fraction expansion to find a rational approximation
         for _ in 0..10 {
             // Limit iterations to avoid infinite loops
             let whole = n.floor();
@@ -86,11 +86,7 @@ impl Spirograph {
         let r = inner_r;
         let p = offset;
 
-        // Calculate the number of rotations needed
-        // The pattern repeats when the inner circle has completed an integer number of rotations
-        // relative to the outer circle. This happens when:
-        // (r_fixed + r) / r is a rational number
-        // The number of rotations is the denominator of this ratio in lowest terms
+        // Calculate the number of rotations needed until the pattern repeats
         let ratio = (r_fixed + r) / r;
         let rotations = self.calculate_rotations(ratio);
 
